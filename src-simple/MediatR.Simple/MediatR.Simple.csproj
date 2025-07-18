@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyName>MediatR.Simple</AssemblyName>
+    <PackageId>MediatR.Simple</PackageId>
+    <Description>Simple and lightweight implementation of the Mediator pattern for .NET, focusing only on request/response with IRequest and IRequestHandler.</Description>
+    <PackageTags>mediator;cqrs;request;response</PackageTags>
+    <Authors>MarcusSchaffert</Authors>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
