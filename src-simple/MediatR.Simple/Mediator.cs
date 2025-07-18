@@ -13,7 +13,8 @@ namespace MediatR.Simple;
 public class Mediator : IMediator
 {
     private readonly IServiceProvider _serviceProvider;
-    private static readonly ConcurrentDictionary<Type, RequestHandlerBase> _requestHandlers = new();
+    private static readonly ConcurrentDictionary<Type, object> _requestHandlersWithResponse = new();
+    private static readonly ConcurrentDictionary<Type, RequestHandlerWrapper> _requestHandlersWithoutResponse = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mediator"/> class.
@@ -31,11 +32,11 @@ public class Mediator : IMediator
             throw new ArgumentNullException(nameof(request));
         }
 
-        var handler = (RequestHandlerWrapper<TResponse>)_requestHandlers.GetOrAdd(request.GetType(), static requestType =>
+        var handler = (RequestHandlerWrapper<TResponse>)_requestHandlersWithResponse.GetOrAdd(request.GetType(), static requestType =>
         {
             var wrapperType = typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
             var wrapper = Activator.CreateInstance(wrapperType) ?? throw new InvalidOperationException($"Could not create wrapper type for {requestType}");
-            return (RequestHandlerBase)wrapper;
+            return (RequestHandlerWrapper<TResponse>)wrapper;
         });
 
         return handler.Handle(request, _serviceProvider, cancellationToken);
@@ -49,11 +50,11 @@ public class Mediator : IMediator
             throw new ArgumentNullException(nameof(request));
         }
 
-        var handler = (RequestHandlerWrapper)_requestHandlers.GetOrAdd(request.GetType(), static requestType =>
+        var handler = _requestHandlersWithoutResponse.GetOrAdd(request.GetType(), static requestType =>
         {
             var wrapperType = typeof(RequestHandlerWrapperImpl<>).MakeGenericType(requestType);
             var wrapper = Activator.CreateInstance(wrapperType) ?? throw new InvalidOperationException($"Could not create wrapper type for {requestType}");
-            return (RequestHandlerBase)wrapper;
+            return (RequestHandlerWrapper)wrapper;
         });
 
         return handler.Handle(request, _serviceProvider, cancellationToken);

@@ -23,8 +23,22 @@ public class PerformanceTests
         }
     }
 
+
+    public class BenchmarkRequestVoid : IRequest
+    {
+        public int Id { get; set; }
+    }
+
+    public class BenchmarkRequestVoidHandler : IRequestHandler<BenchmarkRequestVoid>
+{
+    public Task Handle(BenchmarkRequestVoid request, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+}
+
     [Fact]
-    public async Task Should_cache_handler_wrappers_for_performance()
+    public async Task Should_cache_handler_wrappers_for_performance_request_response()
     {
         var services = new ServiceCollection();
         services.AddMediatRSimple<PerformanceTests>();
@@ -35,7 +49,7 @@ public class PerformanceTests
 
         // First call - creates and caches wrapper
         var request1 = new BenchmarkRequest { Id = 1 };
-        Console.WriteLine("First call - creating and caching wrapper...");
+        Console.WriteLine("First call - creating and cachicng wrapper...");
         var sw1 = Stopwatch.StartNew();
         var result1 = await mediator.Send(request1);
         sw1.Stop();
@@ -72,6 +86,35 @@ public class PerformanceTests
         }
         
         Console.WriteLine("Performance test completed successfully");
+    }
+
+    [Fact]
+    public async Task Should_cache_handler_wrappers_for_performance_request_no_response()
+    {
+        var services = new ServiceCollection();
+        services.AddMediatRSimple<PerformanceTests>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
+
+        // First call - creates and caches wrapper
+        var request1 = new BenchmarkRequestVoid();
+        var sw1 = Stopwatch.StartNew();
+        await mediator.Send(request1);
+        sw1.Stop();
+
+        // Second call - should use cached wrapper and be faster
+        var request2 = new BenchmarkRequestVoid();
+        var sw2 = Stopwatch.StartNew();
+        await mediator.Send(request2);
+        sw2.Stop();
+
+        sw2.ElapsedMilliseconds.ShouldBeLessThan(sw1.ElapsedTicks);
+        
+        // Use ticks for more precise comparison since milliseconds might both be 0
+        if (sw2.ElapsedTicks < sw1.ElapsedTicks)
+        {
+            Console.WriteLine($"✓ Second call was faster: {sw2.ElapsedTicks} < {sw1.ElapsedTicks} ticks");
+        }
     }
 
     [Fact]
